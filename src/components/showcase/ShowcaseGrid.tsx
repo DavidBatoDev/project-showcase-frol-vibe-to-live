@@ -5,14 +5,16 @@ import { getBrowserSupabaseClient } from '@/lib/supabase';
 import type { ProjectWithAuthor } from '@/types';
 import { ProjectCard } from './ProjectCard';
 import { ProjectSidebar } from './ProjectSidebar';
+import { ShowcaseSkeleton } from './ShowcaseSkeleton';
 import { SubmitProjectModal } from './SubmitProjectModal';
 
 interface ShowcaseGridProps {
-  initialProjects: ProjectWithAuthor[];
+  initialProjects?: ProjectWithAuthor[];
 }
 
-export function ShowcaseGrid({ initialProjects }: ShowcaseGridProps) {
-  const [projects, setProjects] = useState<ProjectWithAuthor[]>(initialProjects);
+export function ShowcaseGrid({ initialProjects }: ShowcaseGridProps = {}) {
+  const [projects, setProjects] = useState<ProjectWithAuthor[]>(initialProjects ?? []);
+  const [isLoading, setIsLoading] = useState(!initialProjects);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [currentUsername, setCurrentUsername] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -49,7 +51,13 @@ export function ShowcaseGrid({ initialProjects }: ShowcaseGridProps) {
       const data = await res.json();
       setProjects(data.projects ?? []);
     }
+    setIsLoading(false);
   }, []);
+
+  // Initial fetch when no SSR-provided projects.
+  useEffect(() => {
+    if (!initialProjects) refreshProjects();
+  }, [initialProjects, refreshProjects]);
 
   function handleEditProject(project: ProjectWithAuthor) {
     setEditingProject(project);
@@ -264,6 +272,21 @@ export function ShowcaseGrid({ initialProjects }: ShowcaseGridProps) {
     } finally {
       setReactingIds((s) => { const next = new Set(s); next.delete(projectId); return next; });
     }
+  }
+
+  if (isLoading) {
+    return (
+      <>
+        <ShowcaseSkeleton />
+        <SubmitProjectModal
+          isOpen={modalOpen}
+          isAuthenticated={isAuthenticated}
+          onClose={handleCloseModal}
+          onSuccess={refreshProjects}
+          initialData={editingProject}
+        />
+      </>
+    );
   }
 
   return (

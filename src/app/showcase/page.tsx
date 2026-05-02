@@ -2,28 +2,13 @@ import type { Metadata } from 'next';
 import { CosmicShootingStars } from "@/components/landing/CosmicShootingStars";
 import { TopNav } from "@/components/nav/TopNav";
 import { ShowcaseGrid } from "@/components/showcase/ShowcaseGrid";
-import type { ProjectWithAuthor } from "@/types";
 
 export const metadata: Metadata = {
   title: 'Community Showcase · From Vibe to Live',
   description: 'Projects built by the AWS Cloud Club PUP Manila community.',
 };
 
-async function fetchProjects(): Promise<ProjectWithAuthor[]> {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/projects`, { cache: 'no-store' });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.projects ?? [];
-  } catch {
-    return [];
-  }
-}
-
-export default async function ShowcasePage() {
-  const projects = await fetchProjects();
-
+export default function ShowcasePage() {
   return (
     <main
       className="cosmic-bg relative grid min-h-screen w-full place-items-center"
@@ -48,7 +33,7 @@ export default async function ShowcasePage() {
         className="relative z-10 mx-auto w-full max-w-7xl"
         style={{ padding: '120px 24px 80px' }}
       >
-        <ShowcaseGrid initialProjects={projects} />
+        <ShowcaseGrid />
       </div>
     </main>
   );
